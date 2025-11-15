@@ -1,6 +1,6 @@
 import pandas as pd
 
-from constants import (
+from constants.constants import (
     FIRST_TYPE_COL,
     SECOND_TYPE_COL,
     ID_COL,

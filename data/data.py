@@ -1,9 +1,10 @@
 import pandas as pd
 
-from constants import (
+from constants.constants import (
     COMPLETE_POKEMON_DATA_SET_PATH,
     EXCLUDED_PARAMETERS,
     FINAL_EVOLUTION_COL,
+    ID_COL,
     IS_LEGENDARY_COL,
     POKEMON_DATA_SET_PATH,
     NUMBER_COL
@@ -32,7 +33,7 @@ def get_pokemons_data(
 
     if include_only_final_evolutions:
         final_evolutions_ids = get_final_evolutions_ids()
-        data = (data[data[NUMBER_COL].astype(str)
+        data = (data[data[ID_COL].astype(str)
                      .isin(final_evolutions_ids)])
 
     for parameter in EXCLUDED_PARAMETERS:

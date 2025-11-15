@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 from typing import List
 
-from constants import (
+from constants.constants import (
     TEAM_SIZE,
     POKEMON_TO_REPLACE_AMOUNT,
     FIRST_TYPE_COL,
     SECOND_TYPE_COL,
 )
 
-from helpers import (
+from utils.helpers import (
     are_team_types_unique,
     get_pokemons_without_current_team,
 )
