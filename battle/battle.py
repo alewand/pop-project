@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Callable
+from typing import Callable, Tuple
 from constants.constants import (
     AGAINST_COL,
     ATTACK_COL,
@@ -16,17 +16,36 @@ from constants.constants import (
 )
 
 
-def get_first_attacker(
-    current_team: pd.DataFrame,
-    opponent_team: pd.DataFrame
+def who_is_first(
+    current_pokemon: pd.Series,
+    opponent_pokemon: pd.Series
 ) -> str:
-    first_current_pokemon_speed = current_team.iloc[0][SPEED_COL]
-    first_opponent_pokemon_speed = opponent_team.iloc[0][SPEED_COL]
-
     return (
-        CURRENT if first_current_pokemon_speed > first_opponent_pokemon_speed
+        CURRENT if current_pokemon[SPEED_COL] > opponent_pokemon[SPEED_COL]
         else OPPONENT
     )
+
+
+def swap_to_next_alive(
+        team: pd.DataFrame,
+        team_hp: list[int],
+        current_index: int) -> Tuple[bool, pd.DataFrame, list[int]]:
+
+    team_size = len(team)
+
+    for i in range(current_index + 1, team_size):
+        if team_hp[i] > 0:
+            (team_hp[current_index],
+                team_hp[i]) = (team_hp[i], team_hp[current_index])
+            current_pokemon = team.iloc[current_index].copy()
+            pokemon_to_swap = team.iloc[i].copy()
+            team.iloc[current_index] = pokemon_to_swap
+            team.iloc[i] = current_pokemon
+            # print(f"{current_pokemon['name']} is swapped out for {pokemon_to_swap['name']}!")
+
+            return True, team, team_hp
+
+    return False, team, team_hp
 
 
 def calculate_damage(
@@ -72,16 +91,19 @@ def simulate_battle(
     if len(current_team) != team_size or len(opponent_team) != team_size:
         raise ValueError("Both teams must have equal, specified team size.")
 
+    original_current_team_setup = current_team.copy()
+    original_opponent_team_setup = opponent_team.copy()
+
     current_team_hp = current_team[HP_COL].astype(int).to_list()
     opponent_team_hp = opponent_team[HP_COL].astype(int).to_list()
 
     current_pokemon_index = 0
     opponent_pokemon_index = 0
 
-    turn = get_first_attacker(current_team, opponent_team)
+    turn = who_is_first(current_team.iloc[current_pokemon_index],
+                        opponent_team.iloc[opponent_pokemon_index])
 
-    while (current_pokemon_index < team_size and
-           opponent_pokemon_index < team_size):
+    while (sum(current_team_hp) > 0 and sum(opponent_team_hp) > 0):
 
         if turn == CURRENT:
             attacker = current_team.iloc[current_pokemon_index]
@@ -90,16 +112,36 @@ def simulate_battle(
             damage = calculate_damage(attacker, defender,
                                       type_multiplier_formula,
                                       damage_formula)
-            if (opponent_team_hp[opponent_pokemon_index] - damage) <= 0:
-                opponent_team_hp[opponent_pokemon_index] = 0
-                opponent_pokemon_index += 1
-            else:
+            if damage == 0:
+                # print(f"{defender['name']} is immune to {attacker['name']}'s attacks!")
+                swapped, current_team, current_team_hp = swap_to_next_alive(
+                    current_team,
+                    current_team_hp,
+                    current_pokemon_index
+                )
+
+                turn = OPPONENT
+
+                if not swapped:
+                    break
+
+                continue
+
+            if (opponent_team_hp[opponent_pokemon_index] - damage > 0):
+                # print(f"{attacker['name']} deals {damage} damage to {defender['name']}!")
                 opponent_team_hp[opponent_pokemon_index] -= damage
+                turn = OPPONENT
+                continue
 
-            if opponent_pokemon_index >= team_size:
-                break
+            opponent_team_hp[opponent_pokemon_index] = 0
 
-            turn = OPPONENT
+            if opponent_pokemon_index + 1 < team_size:
+                # print(f"{defender['name']} has fainted!")
+                opponent_pokemon_index += 1
+                turn = who_is_first(
+                    current_team.iloc[current_pokemon_index],
+                    opponent_team.iloc[opponent_pokemon_index]
+                )
 
         else:
             attacker = opponent_team.iloc[opponent_pokemon_index]
@@ -108,19 +150,37 @@ def simulate_battle(
             damage = calculate_damage(attacker, defender,
                                       type_multiplier_formula,
                                       damage_formula)
-            if (current_team_hp[current_pokemon_index] - damage) <= 0:
-                current_team_hp[current_pokemon_index] = 0
-                current_pokemon_index += 1
-            else:
+            if damage == 0:
+                # print(f"{defender['name']} is immune to {attacker['name']}'s attacks!")
+                swapped, opponent_team, opponent_team_hp = swap_to_next_alive(
+                    opponent_team,
+                    opponent_team_hp,
+                    opponent_pokemon_index
+                )
+
+                turn = CURRENT
+
+                if not swapped:
+                    break
+
+                continue
+
+            if (current_team_hp[current_pokemon_index] - damage > 0):
+                # print(f"{attacker['name']} deals {damage} damage to {defender['name']}!")
                 current_team_hp[current_pokemon_index] -= damage
+                turn = CURRENT
+                continue
 
-            if current_pokemon_index >= team_size:
-                break
+            current_team_hp[current_pokemon_index] = 0
 
-            turn = CURRENT
+            if current_pokemon_index + 1 < team_size:
+                # print(f"{defender['name']} has fainted!")
+                current_pokemon_index += 1
+                turn = who_is_first(
+                    current_team.iloc[current_pokemon_index],
+                    opponent_team.iloc[opponent_pokemon_index]
+                )
 
     return (turn,
-            sum(current_team_hp),
-            sum(opponent_team_hp),
-            current_pokemon_index,
-            opponent_pokemon_index)
+            original_current_team_setup,
+            original_opponent_team_setup)

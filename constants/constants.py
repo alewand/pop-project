@@ -1,5 +1,5 @@
-POKEMON_DATA_SET_PATH = "sets/pokemon.csv"
-COMPLETE_POKEMON_DATA_SET_PATH = "sets/complete_pokemon.csv"
+POKEMON_DATA_SET_PATH = "data/sets/pokemon.csv"
+COMPLETE_POKEMON_DATA_SET_PATH = "data/sets/complete_pokemon.csv"
 
 TEAM_SIZE = 6
 POKEMON_TO_REPLACE_AMOUNT = 3

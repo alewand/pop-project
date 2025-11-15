@@ -27,7 +27,7 @@ def damage_attack_minus_defense(
     )
 
 
-def demage_attack_devide_defense(
+def damage_attack_devide_defense(
         combined_attack: int,
         combined_defense: int,
         type_multiplier: float) -> int:

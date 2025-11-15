@@ -31,9 +31,7 @@ def generate_start_team(
             ignore_index=True
         )
 
-        if unique_types and not are_team_types_unique(
-                pd.DataFrame(candidate_team)):
-            remaining_pokemons = remaining_pokemons.drop(chosen_pokemon_index)
+        if unique_types and not are_team_types_unique(candidate_team):
             continue
 
         selected_pokemons = candidate_team
