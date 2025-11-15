@@ -5,8 +5,6 @@ from typing import List
 from constants.constants import (
     TEAM_SIZE,
     POKEMON_TO_REPLACE_AMOUNT,
-    FIRST_TYPE_COL,
-    SECOND_TYPE_COL,
 )
 
 from utils.helpers import (
@@ -17,28 +15,31 @@ from utils.helpers import (
 
 def generate_start_team(
         pokemons: pd.DataFrame,
-        team_size: int = TEAM_SIZE) -> pd.DataFrame:
+        team_size: int = TEAM_SIZE,
+        unique_types: bool = True) -> pd.DataFrame:
     remaining_pokemons = pokemons.copy()
-    selected_pokemons = []
+    selected_pokemons = pd.DataFrame()
     rng = np.random.default_rng()
-    used_types = set()
 
     while len(selected_pokemons) < team_size and not remaining_pokemons.empty:
         chosen_pokemon_index = rng.choice(remaining_pokemons.index.to_numpy())
         chosen_pokemon = remaining_pokemons.loc[chosen_pokemon_index]
-        first_type = chosen_pokemon[FIRST_TYPE_COL]
-        second_type = chosen_pokemon[SECOND_TYPE_COL]
 
-        if (first_type not in used_types and
-                (second_type not in used_types or pd.isna(second_type))):
-            selected_pokemons.append(chosen_pokemon)
-            used_types.add(first_type)
-            if pd.notna(second_type):
-                used_types.add(second_type)
+        candidate_team = selected_pokemons.copy()
+        candidate_team = pd.concat(
+            [selected_pokemons, chosen_pokemon.to_frame().T],
+            ignore_index=True
+        )
 
+        if unique_types and not are_team_types_unique(
+                pd.DataFrame(candidate_team)):
+            remaining_pokemons = remaining_pokemons.drop(chosen_pokemon_index)
+            continue
+
+        selected_pokemons = candidate_team
         remaining_pokemons = remaining_pokemons.drop(chosen_pokemon_index)
 
-    return pd.DataFrame(selected_pokemons).reset_index(drop=True)
+    return selected_pokemons.reset_index(drop=True)
 
 
 def generate_team_with_replacement(
