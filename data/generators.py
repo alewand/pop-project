@@ -22,8 +22,10 @@ def generate_start_team(
     rng = np.random.default_rng()
 
     while len(selected_pokemons) < team_size and not remaining_pokemons.empty:
-        chosen_pokemon_index = rng.choice(remaining_pokemons.index.to_numpy())
-        chosen_pokemon = remaining_pokemons.loc[chosen_pokemon_index]
+        chosen_pokemon_index: int = rng.choice(remaining_pokemons.index)
+        chosen_pokemon: pd.Series = (
+            remaining_pokemons.loc[chosen_pokemon_index]
+        )
 
         candidate_team = selected_pokemons.copy()
         candidate_team = pd.concat(
@@ -40,7 +42,7 @@ def generate_start_team(
     return selected_pokemons.reset_index(drop=True)
 
 
-def generate_team_with_replacement(
+def generate_team_with_random_replacement(
         all_pokemons: pd.DataFrame,
         current_team: pd.DataFrame,
         pokemon_to_replace_amount: int = POKEMON_TO_REPLACE_AMOUNT,
@@ -61,7 +63,14 @@ def generate_team_with_replacement(
     )
 
     for pokemon_in_team_index in pokemon_chosen_to_replace_indexes:
-        for _, candidate in possible_pokemons.iterrows():
+        if possible_pokemons.empty:
+            break
+
+        candidate_indexes = rng.permutation(possible_pokemons.index)
+
+        for candidate_index in candidate_indexes:
+            candidate = possible_pokemons.loc[candidate_index]
+
             candidate_team = new_team.copy()
             candidate_team.iloc[pokemon_in_team_index] = candidate
 
@@ -69,7 +78,7 @@ def generate_team_with_replacement(
                 continue
 
             new_team = candidate_team
-            possible_pokemons = possible_pokemons.drop(candidate.name)
+            possible_pokemons = possible_pokemons.drop(candidate.index)
             break
 
     return new_team.reset_index(drop=True)
@@ -94,7 +103,7 @@ def generate_opponent_teams(
                 continue
 
             if len(opponent_team) == team_size:
-                opponent_teams.append(opponent_team)
+                opponent_teams.append(opponent_team.reset_index(drop=True))
 
             if limit is not None and len(opponent_teams) >= limit:
                 break
