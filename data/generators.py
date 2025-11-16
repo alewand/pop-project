@@ -7,7 +7,7 @@ from constants.constants import (
     POKEMON_TO_REPLACE_AMOUNT,
 )
 
-from utils.helpers import (
+from data.helpers import (
     are_team_types_unique,
     get_pokemons_without_current_team,
 )
