@@ -4,6 +4,7 @@ from battle.helpers import (
     recover_hp_order,
     who_is_first,
     swap_to_next_alive,
+    Turn,
 )
 from constants.constants import (
     AGAINST_COL,
@@ -59,7 +60,7 @@ def simulate_battle(
     type_multiplier_formula: Callable[[float, float], float],
     damage_formula: Callable[[int, int, float], int],
     team_size: int = TEAM_SIZE
-) -> Tuple[str, pd.DataFrame, pd.DataFrame, List[int], List[int]]:
+) -> Tuple[Turn, pd.DataFrame, pd.DataFrame, List[int], List[int]]:
     if len(current_team) != team_size or len(opponent_team) != team_size:
         raise ValueError("Both teams must have equal, specified team size.")
 

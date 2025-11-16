@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from itertools import permutations
 from typing import List
 
 from constants.constants import (
@@ -15,8 +16,8 @@ from data.helpers import (
 
 def generate_start_team(
         pokemons: pd.DataFrame,
-        team_size: int = TEAM_SIZE,
-        unique_types: bool = True) -> pd.DataFrame:
+        unique_types: bool = True,
+        team_size: int = TEAM_SIZE,) -> pd.DataFrame:
     remaining_pokemons = pokemons.copy()
     selected_pokemons = pd.DataFrame()
     rng = np.random.default_rng()
@@ -78,7 +79,7 @@ def generate_team_with_random_replacement(
                 continue
 
             new_team = candidate_team
-            possible_pokemons = possible_pokemons.drop(candidate.index)
+            possible_pokemons = possible_pokemons.drop(candidate.name)
             break
 
     return new_team.reset_index(drop=True)
@@ -87,9 +88,9 @@ def generate_team_with_random_replacement(
 def generate_opponent_teams(
         all_pokemons: pd.DataFrame,
         current_team: pd.DataFrame,
-        team_size: int = TEAM_SIZE,
         unique_types: bool = True,
-        limit: int | None = None) -> List[pd.DataFrame]:
+        limit: int | None = None,
+        team_size: int = TEAM_SIZE,) -> List[pd.DataFrame]:
     opponent_teams: List[pd.DataFrame] = []
     possible_pokemons = get_pokemons_without_current_team(
         all_pokemons, current_team)
@@ -112,3 +113,14 @@ def generate_opponent_teams(
             break
 
     return opponent_teams
+
+
+def generate_team_permutations(team: pd.DataFrame) -> List[pd.DataFrame]:
+    indexes = team.index.tolist()
+    permuted_teams: List[pd.DataFrame] = []
+
+    for permutation in permutations(indexes):
+        permuted_team = team.loc[list(permutation)].reset_index(drop=True)
+        permuted_teams.append(permuted_team)
+
+    return permuted_teams
