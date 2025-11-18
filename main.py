@@ -2,6 +2,7 @@ from algorithms.evaluation import (
     find_the_best_opponent_team,
     get_sum_of_team_stats
 )
+from battle.battle import simulate_battle
 from battle.battle_formulas import (
     damage_attack_minus_defense,
     multiply_type_multiplier
@@ -9,6 +10,7 @@ from battle.battle_formulas import (
 from data.data import get_pokemons_data
 from data.generators import (
     generate_start_team,
+    generate_team_with_random_replacement,
 )
 
 from constants.constants import (
@@ -29,8 +31,8 @@ if __name__ == "__main__":
         current_team,
         multiply_type_multiplier,
         damage_attack_minus_defense,
-        False,
-        results_amount=5,
+        True,
+        results_amount=1,
     )
     for i, opponent in enumerate(best_opponents, start=1):
         print(f"Opponent Team {i}:")
@@ -41,3 +43,23 @@ if __name__ == "__main__":
         )
         print(f"Stats Sum: {opponent.stats_sum}")
     print(f"Total Opponents Evaluated: {total_opponents}")
+    current_team = generate_team_with_random_replacement(
+        pokemons,
+        current_team,
+    )
+    print("New Current Team after Replacement:")
+    print(current_team[[NAME_COL, FIRST_TYPE_COL, SECOND_TYPE_COL]])
+    print(f"Stats sum: {get_sum_of_team_stats(current_team)}")
+    opponent, remaining_hp, original_hp = simulate_battle(
+        current_team,
+        best_opponents[0].team,
+        multiply_type_multiplier,
+        damage_attack_minus_defense,
+    )
+    print("Battle Result:")
+    print("Opponent Team:")
+    print(opponent[[NAME_COL, FIRST_TYPE_COL, SECOND_TYPE_COL]])
+    print(
+        f"Current Team Remaining HP: {remaining_hp} "
+        f"out of {original_hp} "
+    )

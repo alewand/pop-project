@@ -28,7 +28,7 @@ def find_the_best_opponent_team(
         type_multiplier_formula: Callable[[float, float], float],
         damage_formula: Callable[[int, int, float], int],
         unique_types: bool = True,
-        opponents_limit: int | None = 10,
+        opponents_limit: int | None = None,
         results_amount: int = 1,
 ) -> Tuple[Opponent, ...]:
     opponents = generate_opponent_teams(
