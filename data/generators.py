@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from itertools import permutations
 from typing import List
 
 from constants.constants import (
@@ -113,14 +112,3 @@ def generate_opponent_teams(
             break
 
     return opponent_teams
-
-
-def generate_team_permutations(team: pd.DataFrame) -> List[pd.DataFrame]:
-    indexes = team.index.tolist()
-    permuted_teams: List[pd.DataFrame] = []
-
-    for permutation in permutations(indexes):
-        permuted_team = team.loc[list(permutation)].reset_index(drop=True)
-        permuted_teams.append(permuted_team)
-
-    return permuted_teams

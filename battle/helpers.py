@@ -25,7 +25,7 @@ def swap_to_next_alive(
     team_size = len(team)
 
     for i in range(current_index + 1, team_size):
-        if team_hp[i][0] > 0:
+        if team_hp[i] > 0:
             (team_hp[current_index],
                 team_hp[i]) = (team_hp[i], team_hp[current_index])
             current_pokemon = team.iloc[current_index].copy()
@@ -36,12 +36,3 @@ def swap_to_next_alive(
             return True, team, team_hp
 
     return False, team, team_hp
-
-
-def recover_hp_order(team_hp: List[Tuple[int, int]]) -> List[int]:
-    team_hp_in_order: List[int] = [0] * len(team_hp)
-
-    for hp, oryginal_index in team_hp:
-        team_hp_in_order[oryginal_index] = hp
-
-    return team_hp_in_order

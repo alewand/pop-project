@@ -1,7 +1,6 @@
 import pandas as pd
 from typing import Callable, Tuple, List
 from battle.helpers import (
-    recover_hp_order,
     who_is_first,
     swap_to_next_alive,
     Turn,
@@ -64,18 +63,10 @@ def simulate_battle(
     if len(current_team) != team_size or len(opponent_team) != team_size:
         raise ValueError("Both teams must have equal, specified team size.")
 
-    original_current_team_setup = current_team.copy()
     original_opponent_team_setup = opponent_team.copy()
 
-    current_team_hp = [
-        [hp, i] for i, hp in enumerate(
-            current_team[HP_COL].astype(int).to_list())
-    ]
-    opponent_team_hp = [
-        [hp, i] for i, hp in enumerate(
-            opponent_team[HP_COL].astype(int).to_list())
-    ]
-
+    current_team_hp = current_team[HP_COL].astype(int).to_list()
+    opponent_team_hp = opponent_team[HP_COL].astype(int).to_list()
     current_pokemon_index = 0
     opponent_pokemon_index = 0
 
@@ -84,8 +75,8 @@ def simulate_battle(
         opponent_team.iloc[opponent_pokemon_index]
     )
 
-    while (sum(hp for hp, _ in current_team_hp) > 0 and
-            sum(hp for hp, _ in opponent_team_hp) > 0):
+    while (sum(current_team_hp) > 0 and
+            sum(opponent_team_hp) > 0):
 
         if turn == CURRENT:
             attacker = current_team.iloc[current_pokemon_index]
@@ -108,12 +99,12 @@ def simulate_battle(
 
                 continue
 
-            if (opponent_team_hp[opponent_pokemon_index][0] - damage > 0):
-                opponent_team_hp[opponent_pokemon_index][0] -= damage
+            if (opponent_team_hp[opponent_pokemon_index] - damage > 0):
+                opponent_team_hp[opponent_pokemon_index] -= damage
                 turn = OPPONENT
                 continue
 
-            opponent_team_hp[opponent_pokemon_index][0] = 0
+            opponent_team_hp[opponent_pokemon_index] = 0
             if opponent_pokemon_index + 1 < team_size:
                 opponent_pokemon_index += 1
                 turn = who_is_first(
@@ -142,12 +133,12 @@ def simulate_battle(
 
                 continue
 
-            if (current_team_hp[current_pokemon_index][0] - damage > 0):
-                current_team_hp[current_pokemon_index][0] -= damage
+            if (current_team_hp[current_pokemon_index] - damage > 0):
+                current_team_hp[current_pokemon_index] -= damage
                 turn = CURRENT
                 continue
 
-            current_team_hp[current_pokemon_index][0] = 0
+            current_team_hp[current_pokemon_index] = 0
             if current_pokemon_index + 1 < team_size:
                 current_pokemon_index += 1
                 turn = who_is_first(
@@ -155,8 +146,5 @@ def simulate_battle(
                     opponent_team.iloc[opponent_pokemon_index]
                 )
 
-    return (turn,
-            original_current_team_setup,
-            original_opponent_team_setup,
-            recover_hp_order(current_team_hp),
-            recover_hp_order(opponent_team_hp))
+    return (original_opponent_team_setup, sum(current_team_hp),
+            sum(current_team[HP_COL].astype(int).to_list()))
