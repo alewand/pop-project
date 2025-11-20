@@ -17,6 +17,13 @@ HP_COL = "hp"
 SPEED_COL = "speed"
 IS_LEGENDARY_COL = "is_legendary"
 
+STATS_COLS = [
+    ATTACK_COL,
+    SPECIAL_ATTACK_COL,
+    DEFENSE_COL,
+    SPECIAL_DEFENSE_COL,
+]
+
 EXCLUDED_PARAMETERS = ["abilities",
                        "base_egg_steps",
                        "base_happiness",

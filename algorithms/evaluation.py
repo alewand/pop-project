@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Callable, Tuple
 
-from algorithms.best_opponents_list import BestOpponentsList, Opponent
+from structures.best_opponents_list import BestOpponentsList, Opponent
 from battle.battle import simulate_battle
 from constants.constants import (
     ATTACK_COL,

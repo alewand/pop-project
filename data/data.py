@@ -20,7 +20,7 @@ def get_final_evolutions_ids(
     return final_evolutions[NUMBER_COL].astype(str).tolist()
 
 
-def get_pokemons_data(
+def get_pokemons(
         data_set_path: str = POKEMON_DATA_SET_PATH,
         include_legendary: bool = False,
         include_only_final_evolutions: bool = True
