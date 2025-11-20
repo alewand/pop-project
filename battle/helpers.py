@@ -2,6 +2,7 @@ import pandas as pd
 from typing import Literal, Tuple, List
 
 from constants.constants import CURRENT, OPPONENT, SPEED_COL
+from structures.team import PokemonTeam
 
 Turn = Literal["current", "opponent"]
 
@@ -17,21 +18,17 @@ def who_is_first(
 
 
 def swap_to_next_alive(
-        team: pd.DataFrame,
-        team_hp: List[Tuple[int, int]],
+        team: PokemonTeam,
+        team_hp: List[int],
         current_index: int
-        ) -> Tuple[bool, pd.DataFrame, List[Tuple[int, int]]]:
+        ) -> Tuple[bool, PokemonTeam, List[int]]:
 
-    team_size = len(team)
-
-    for i in range(current_index + 1, team_size):
+    for i in range(current_index + 1, team.size):
         if team_hp[i] > 0:
             (team_hp[current_index],
                 team_hp[i]) = (team_hp[i], team_hp[current_index])
-            current_pokemon = team.iloc[current_index].copy()
-            pokemon_to_swap = team.iloc[i].copy()
-            team.iloc[current_index] = pokemon_to_swap
-            team.iloc[i] = current_pokemon
+
+            team.swap_members(current_index, i)
 
             return True, team, team_hp
 

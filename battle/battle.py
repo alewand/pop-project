@@ -70,16 +70,16 @@ def simulate_battle(
     opponent_pokemon_index = 0
 
     turn = who_is_first(
-        current_team.iloc[current_pokemon_index],
-        opponent_team.iloc[opponent_pokemon_index]
+        current_team.members.iloc[current_pokemon_index],
+        opponent_team.members.iloc[opponent_pokemon_index]
     )
 
     while (sum(current_team_hp) > 0 and
             sum(opponent_team_hp) > 0):
 
         if turn == CURRENT:
-            attacker = current_team.iloc[current_pokemon_index]
-            defender = opponent_team.iloc[opponent_pokemon_index]
+            attacker = current_team.members.iloc[current_pokemon_index]
+            defender = opponent_team.members.iloc[opponent_pokemon_index]
 
             damage = calculate_damage(attacker, defender,
                                       type_multiplier_formula,
@@ -107,13 +107,13 @@ def simulate_battle(
             if opponent_pokemon_index + 1 < team_size:
                 opponent_pokemon_index += 1
                 turn = who_is_first(
-                    current_team.iloc[current_pokemon_index],
-                    opponent_team.iloc[opponent_pokemon_index]
+                    current_team.members.iloc[current_pokemon_index],
+                    opponent_team.members.iloc[opponent_pokemon_index]
                 )
 
         else:
-            attacker = opponent_team.iloc[opponent_pokemon_index]
-            defender = current_team.iloc[current_pokemon_index]
+            attacker = opponent_team.members.iloc[opponent_pokemon_index]
+            defender = current_team.members.iloc[current_pokemon_index]
 
             damage = calculate_damage(attacker, defender,
                                       type_multiplier_formula,
@@ -141,8 +141,8 @@ def simulate_battle(
             if current_pokemon_index + 1 < team_size:
                 current_pokemon_index += 1
                 turn = who_is_first(
-                    current_team.iloc[current_pokemon_index],
-                    opponent_team.iloc[opponent_pokemon_index]
+                    current_team.members.iloc[current_pokemon_index],
+                    opponent_team.members.iloc[opponent_pokemon_index]
                 )
 
     return original_opponent_team_setup, sum(current_team_hp)

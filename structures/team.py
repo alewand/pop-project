@@ -7,6 +7,7 @@ from constants.constants import (
     FIRST_TYPE_COL,
     HP_COL,
     ID_COL,
+    NAME_COL,
     SECOND_TYPE_COL,
     STATS_COLS,
     TEAM_SIZE
@@ -27,7 +28,7 @@ class PokemonTeam:
 
     @property
     def stats(self) -> int:
-        return self._members[STATS_COLS].astype(int).to_list().sum()
+        return self._members[STATS_COLS].astype(int).to_numpy().sum()
 
     @property
     def ids(self) -> List[str]:
@@ -43,6 +44,13 @@ class PokemonTeam:
 
     def copy(self) -> "PokemonTeam":
         return PokemonTeam(self._members.copy())
+
+    def swap_members(self, first_index: int, second_index: int) -> None:
+        new_members = self._members.copy()
+        temp = new_members.iloc[first_index].copy()
+        new_members.iloc[first_index] = new_members.iloc[second_index]
+        new_members.iloc[second_index] = temp
+        self.members = new_members
 
     def get_pokemons_without_team(
         self,
@@ -72,7 +80,7 @@ class PokemonTeam:
                 if unique_types and not self.unique_types(opponent_members):
                     continue
 
-                if len(opponent_members) == team_size:
+                if len(opponent_members) != team_size:
                     opponents.append(
                         PokemonTeam(opponent_members.reset_index(drop=True))
                     )
@@ -126,6 +134,9 @@ class PokemonTeam:
                 break
 
         return PokemonTeam(new_members.reset_index(drop=True))
+
+    def print(self) -> None:
+        print(self._members[[NAME_COL, FIRST_TYPE_COL, SECOND_TYPE_COL]])
 
     @classmethod
     def generate(
