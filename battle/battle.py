@@ -145,4 +145,9 @@ def simulate_battle(
                     opponent_team.members.iloc[opponent_pokemon_index]
                 )
 
-    return original_opponent_team_setup, sum(current_team_hp)
+    final_remaining_hp = sum(current_team_hp)
+
+    if (final_remaining_hp > 0 and turn == OPPONENT):
+        final_remaining_hp = 0
+
+    return original_opponent_team_setup, final_remaining_hp
