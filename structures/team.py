@@ -5,6 +5,7 @@ from typing import List
 
 from constants.constants import (
     FIRST_TYPE_COL,
+    HP_COL,
     ID_COL,
     SECOND_TYPE_COL,
     STATS_COLS,
@@ -33,8 +34,15 @@ class PokemonTeam:
         return self._members[ID_COL].astype(str).to_list()
 
     @property
+    def hps(self) -> List[int]:
+        return self._members[HP_COL].astype(int).to_list()
+
+    @property
     def size(self) -> int:
         return len(self._members)
+
+    def copy(self) -> "PokemonTeam":
+        return PokemonTeam(self._members.copy())
 
     def get_pokemons_without_team(
         self,
@@ -49,7 +57,7 @@ class PokemonTeam:
         unique_types: bool = True,
         team_size: int = TEAM_SIZE,
         limit: int | None = None
-    ):
+    ) -> List["PokemonTeam"]:
         if limit is not None and limit <= 0:
             raise ValueError("Limit must be a positive integer or None.")
 

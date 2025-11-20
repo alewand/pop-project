@@ -1,16 +1,14 @@
 import pandas as pd
-from typing import Callable, Tuple, List
+from typing import Callable, Tuple
 from battle.helpers import (
     who_is_first,
     swap_to_next_alive,
-    Turn,
 )
 from constants.constants import (
     AGAINST_COL,
     ATTACK_COL,
     DEFENSE_COL,
     FIRST_TYPE_COL,
-    HP_COL,
     SECOND_TYPE_COL,
     SPECIAL_ATTACK_COL,
     SPECIAL_DEFENSE_COL,
@@ -18,6 +16,7 @@ from constants.constants import (
     CURRENT,
     OPPONENT,
 )
+from structures.team import PokemonTeam
 
 
 def calculate_damage(
@@ -54,19 +53,19 @@ def calculate_damage(
 
 
 def simulate_battle(
-    current_team: pd.DataFrame,
-    opponent_team: pd.DataFrame,
+    current_team: PokemonTeam,
+    opponent_team: PokemonTeam,
     type_multiplier_formula: Callable[[float, float], float],
     damage_formula: Callable[[int, int, float], int],
     team_size: int = TEAM_SIZE
-) -> Tuple[Turn, pd.DataFrame, pd.DataFrame, List[int], List[int]]:
-    if len(current_team) != team_size or len(opponent_team) != team_size:
+) -> Tuple[PokemonTeam, int]:
+    if current_team.size != team_size or opponent_team.size != team_size:
         raise ValueError("Both teams must have equal, specified team size.")
 
     original_opponent_team_setup = opponent_team.copy()
 
-    current_team_hp = current_team[HP_COL].astype(int).to_list()
-    opponent_team_hp = opponent_team[HP_COL].astype(int).to_list()
+    current_team_hp = current_team.hps
+    opponent_team_hp = opponent_team.hps
     current_pokemon_index = 0
     opponent_pokemon_index = 0
 
@@ -146,5 +145,4 @@ def simulate_battle(
                     opponent_team.iloc[opponent_pokemon_index]
                 )
 
-    return (original_opponent_team_setup, sum(current_team_hp),
-            sum(current_team[HP_COL].astype(int).to_list()))
+    return original_opponent_team_setup, sum(current_team_hp)
