@@ -1,0 +1,176 @@
+from collections.abc import Callable
+from typing import Literal
+
+import pandas as pd
+
+from classes import PokemonTeam
+from constants import (
+    AGAINST,
+    ATTACK,
+    DEFENSE,
+    FIRST_TYPE,
+    SECOND_TYPE,
+    SPECIAL_ATTACK,
+    SPECIAL_DEFENSE,
+    SPEED,
+)
+
+type Turn = Literal["current", "opponent"]
+
+
+def simulate_battle(
+    current_team: PokemonTeam,
+    opponent_team: PokemonTeam,
+    type_multiplier_formula: Callable[[float, float], float],
+    damage_formula: Callable[[int, int, float], int],
+) -> tuple[PokemonTeam, int]:
+    original_opponent_team = opponent_team.copy()
+
+    current_team_hp = current_team.get_hps()
+    opponent_team_hp = opponent_team.get_hps()
+    current_pokemon_index = 0
+    opponent_pokemon_index = 0
+
+    turn = get_first_attacker(
+        current_team,
+        opponent_team,
+        current_pokemon_index,
+        opponent_pokemon_index,
+    )
+
+    while sum(current_team_hp) > 0 and sum(opponent_team_hp) > 0:
+        if turn == "current":
+            attacker = current_team.members.iloc[current_pokemon_index]
+            defender = opponent_team.members.iloc[opponent_pokemon_index]
+
+            damage = calculate_damage(
+                attacker,
+                defender,
+                type_multiplier_formula,
+                damage_formula,
+            )
+
+            if damage == 0:
+                swapped, current_team, current_team_hp = swap_to_next_alive(
+                    current_team, current_team_hp, current_pokemon_index
+                )
+
+                turn = "opponent"
+
+                if not swapped:
+                    break
+
+                continue
+
+            if opponent_team_hp[opponent_pokemon_index] - damage > 0:
+                opponent_team_hp[opponent_pokemon_index] -= damage
+                turn = "opponent"
+                continue
+
+            opponent_team_hp[opponent_pokemon_index] = 0
+            if opponent_pokemon_index + 1 < opponent_team.get_size():
+                opponent_pokemon_index += 1
+                turn = get_first_attacker(
+                    current_team,
+                    opponent_team,
+                    current_pokemon_index,
+                    opponent_pokemon_index,
+                )
+
+        else:
+            attacker = opponent_team.members.iloc[opponent_pokemon_index]
+            defender = current_team.members.iloc[current_pokemon_index]
+
+            damage = calculate_damage(
+                attacker,
+                defender,
+                type_multiplier_formula,
+                damage_formula,
+            )
+
+            if damage == 0:
+                swapped, opponent_team, opponent_team_hp = swap_to_next_alive(
+                    opponent_team, opponent_team_hp, opponent_pokemon_index
+                )
+
+                turn = "current"
+
+                if not swapped:
+                    break
+
+                continue
+
+            if current_team_hp[current_pokemon_index] - damage > 0:
+                current_team_hp[current_pokemon_index] -= damage
+                turn = "current"
+                continue
+
+            current_team_hp[current_pokemon_index] = 0
+            if current_pokemon_index + 1 < current_team.get_size():
+                current_pokemon_index += 1
+                turn = get_first_attacker(
+                    current_team,
+                    opponent_team,
+                    current_pokemon_index,
+                    opponent_pokemon_index,
+                )
+
+    final_current_team_hp = sum(current_team_hp)
+
+    if final_current_team_hp > 0 and turn == "opponent":
+        final_current_team_hp = 0
+
+    return original_opponent_team, final_current_team_hp
+
+
+def calculate_damage(
+    attacker: pd.Series,
+    defender: pd.Series,
+    type_multiplier_formula: Callable[[float, float], float],
+    damage_formula: Callable[[int, int, float], int],
+) -> int:
+    combined_attack: int = attacker[ATTACK] + attacker[SPECIAL_ATTACK]
+    combined_defense: int = defender[DEFENSE] + defender[SPECIAL_DEFENSE]
+
+    firstEffectivness: float = defender[f"{AGAINST}{attacker[FIRST_TYPE]}"]
+
+    secondEffectivness: float = (
+        defender[f"{AGAINST}{attacker[SECOND_TYPE]}"]
+        if pd.notna(attacker[SECOND_TYPE])
+        else 1.0
+    )
+
+    type_multiplier = type_multiplier_formula(firstEffectivness, secondEffectivness)
+
+    if type_multiplier == 0:
+        return 0
+
+    damage = damage_formula(combined_attack, combined_defense, type_multiplier)
+
+    return max(damage, 1)
+
+
+def get_first_attacker(
+    current_team: PokemonTeam,
+    opponent_team: PokemonTeam,
+    current_pokemon_index: int,
+    opponent_pokemon_index: int,
+) -> Turn:
+    current_speed = int(current_team.members.iloc[current_pokemon_index][SPEED])
+    opponent_speed = int(opponent_team.members.iloc[opponent_pokemon_index][SPEED])
+
+    return "current" if current_speed > opponent_speed else "opponent"
+
+
+def swap_to_next_alive(
+    team: PokemonTeam, team_hp: list[int], current_index: int
+) -> tuple[bool, PokemonTeam, list[int]]:
+    for i in range(current_index + 1, team.get_size()):
+        if team_hp[i] > 0:
+            (team_hp[current_index], team_hp[i]) = (team_hp[i], team_hp[current_index])
+
+            team.swap_members(current_index, i)
+
+            return True, team, team_hp
+
+    return False, team, team_hp
