@@ -5,14 +5,14 @@ from pandera.typing import DataFrame
 
 from classes import BestOpponentsList, Opponent, PokemonTeam
 from schemas import PokemonSchema
-from simulation import simulate_battle
+from simulation import DamageFormula, TypeMultiplierFormula, simulate_battle
 
 
 def find_the_best_opponent_team(
     pokemons: DataFrame[PokemonSchema],
     current_team: PokemonTeam,
-    type_multiplier_formula: Callable[[float, float], float],
-    damage_formula: Callable[[int, int, float], int],
+    type_multiplier_formula: TypeMultiplierFormula,
+    damage_formula: DamageFormula,
     unique_types: bool = True,
     opponents_limit: int | None = None,
     results_amount: int = 1,

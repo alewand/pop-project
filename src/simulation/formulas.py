@@ -1,3 +1,9 @@
+from collections.abc import Callable
+
+type TypeMultiplierFormula = Callable[[float, float], float]
+type DamageFormula = Callable[[int, int, float], int]
+
+
 def min_type_multiplier(firstEffectivness: float, secondEffectivness: float) -> float:
     return min(firstEffectivness, secondEffectivness)
 

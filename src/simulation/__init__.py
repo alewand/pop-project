@@ -1,4 +1,6 @@
 from .formulas import (
+    DamageFormula,
+    TypeMultiplierFormula,
     damage_attack_devide_defense,
     damage_attack_minus_defense,
     max_type_multiplier,
@@ -14,4 +16,6 @@ __all__ = [
     "multiply_type_multiplier",
     "damage_attack_minus_defense",
     "damage_attack_devide_defense",
+    "TypeMultiplierFormula",
+    "DamageFormula",
 ]

@@ -15,14 +15,16 @@ from constants import (
     SPEED,
 )
 
+from .formulas import DamageFormula, TypeMultiplierFormula
+
 type Turn = Literal["current", "opponent"]
 
 
 def simulate_battle(
     current_team: PokemonTeam,
     opponent_team: PokemonTeam,
-    type_multiplier_formula: Callable[[float, float], float],
-    damage_formula: Callable[[int, int, float], int],
+    type_multiplier_formula: TypeMultiplierFormula,
+    damage_formula: DamageFormula,
 ) -> tuple[PokemonTeam, int]:
     original_opponent_team = opponent_team.copy()
 
