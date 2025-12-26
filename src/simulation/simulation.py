@@ -25,25 +25,26 @@ def simulate_battle(
     opponent_team: PokemonTeam,
     type_multiplier_formula: TypeMultiplierFormula,
     damage_formula: DamageFormula,
-) -> tuple[PokemonTeam, int]:
-    original_opponent_team = opponent_team.copy()
+) -> int:
+    current_team_battle = current_team.copy()
+    opponent_team_battle = opponent_team.copy()
 
-    current_team_hp = current_team.get_hps()
-    opponent_team_hp = opponent_team.get_hps()
+    current_team_hp = current_team_battle.get_hps()
+    opponent_team_hp = opponent_team_battle.get_hps()
     current_pokemon_index = 0
     opponent_pokemon_index = 0
 
     turn = get_first_attacker(
-        current_team,
-        opponent_team,
+        current_team_battle,
+        opponent_team_battle,
         current_pokemon_index,
         opponent_pokemon_index,
     )
 
     while sum(current_team_hp) > 0 and sum(opponent_team_hp) > 0:
         if turn == "current":
-            attacker = current_team.members.iloc[current_pokemon_index]
-            defender = opponent_team.members.iloc[opponent_pokemon_index]
+            attacker = current_team_battle.members.iloc[current_pokemon_index]
+            defender = opponent_team_battle.members.iloc[opponent_pokemon_index]
 
             damage = calculate_damage(
                 attacker,
@@ -53,8 +54,8 @@ def simulate_battle(
             )
 
             if damage == 0:
-                swapped, current_team, current_team_hp = swap_to_next_alive(
-                    current_team, current_team_hp, current_pokemon_index
+                swapped, current_team_battle, current_team_hp = swap_to_next_alive(
+                    current_team_battle, current_team_hp, current_pokemon_index
                 )
 
                 turn = "opponent"
@@ -70,18 +71,18 @@ def simulate_battle(
                 continue
 
             opponent_team_hp[opponent_pokemon_index] = 0
-            if opponent_pokemon_index + 1 < opponent_team.get_size():
+            if opponent_pokemon_index + 1 < opponent_team_battle.get_size():
                 opponent_pokemon_index += 1
                 turn = get_first_attacker(
-                    current_team,
-                    opponent_team,
+                    current_team_battle,
+                    opponent_team_battle,
                     current_pokemon_index,
                     opponent_pokemon_index,
                 )
 
         else:
-            attacker = opponent_team.members.iloc[opponent_pokemon_index]
-            defender = current_team.members.iloc[current_pokemon_index]
+            attacker = opponent_team_battle.members.iloc[opponent_pokemon_index]
+            defender = current_team_battle.members.iloc[current_pokemon_index]
 
             damage = calculate_damage(
                 attacker,
@@ -91,8 +92,8 @@ def simulate_battle(
             )
 
             if damage == 0:
-                swapped, opponent_team, opponent_team_hp = swap_to_next_alive(
-                    opponent_team, opponent_team_hp, opponent_pokemon_index
+                swapped, opponent_team_battle, opponent_team_hp = swap_to_next_alive(
+                    opponent_team_battle, opponent_team_hp, opponent_pokemon_index
                 )
 
                 turn = "current"
@@ -108,11 +109,11 @@ def simulate_battle(
                 continue
 
             current_team_hp[current_pokemon_index] = 0
-            if current_pokemon_index + 1 < current_team.get_size():
+            if current_pokemon_index + 1 < current_team_battle.get_size():
                 current_pokemon_index += 1
                 turn = get_first_attacker(
-                    current_team,
-                    opponent_team,
+                    current_team_battle,
+                    opponent_team_battle,
                     current_pokemon_index,
                     opponent_pokemon_index,
                 )
@@ -122,7 +123,7 @@ def simulate_battle(
     if final_current_team_hp > 0 and turn == "opponent":
         final_current_team_hp = 0
 
-    return original_opponent_team, final_current_team_hp
+    return final_current_team_hp
 
 
 def calculate_damage(

@@ -1,0 +1,25 @@
+# Projekt na POP (Przeszukiwanie i optymalizacja), Politechnika Warszawska
+## Tytuł: Catch'em All
+### By Bartosz Psik & Amadeusz Lewandowski
+
+Celem projektu jest opracowanie i analiza mechanizmu uzyskania najlepszej możliwej drużyny sześciu pokemonów przy pomocy algorytmów przeszukujących przestrzeń.
+
+Szczegóły i dokumentację można znaleźć [w tym miejscu](documentation.pdf).
+
+Projekt został stworzony przy pomocy menadżera pakietów [uv](https://github.com/astral-sh/uv) i rekomenduje się jego instalację w celu uruchomienia.
+
+## Instrukcja uruchomienia
+Poniższa instrukcja odnosi się do systemu Linux.
+
+1. Instalacja uv
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+2. Pobranie odpowiednich bibliotek
+```bash
+uv sync
+```
+3. Uruchomienie projektu
+```bash
+uv run src/main.py
+```

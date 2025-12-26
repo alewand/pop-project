@@ -22,8 +22,8 @@ class PokemonTeam:
 
         self.members = members.copy().reset_index(drop=True)
 
-    def get_stats(self) -> int:
-        return self.members[STATS_COLS].astype(int).to_numpy().sum()
+    def get_stats_sum(self) -> int:
+        return int(self.members[STATS_COLS].astype(int).sum().sum())
 
     def get_ids(self) -> list[str]:
         return self.members[ID].astype(str).to_list()
@@ -44,7 +44,7 @@ class PokemonTeam:
         new_members.iloc[second_index] = temp
         self.members = new_members.reset_index(drop=True)
 
-    def generate_opponents(
+    def generate_neighbors(
         self,
         pokemons: DataFrame[PokemonSchema],
         unique_types: bool = True,
@@ -53,26 +53,32 @@ class PokemonTeam:
         if limit is not None and limit <= 0:
             raise ValueError("Limit must be positive or None.")
 
-        opponents: list[PokemonTeam] = []
+        rng = np.random.default_rng()
+
+        neighbors: list[PokemonTeam] = []
         possible_pokemons = get_pokemon_with_excluded_ids(self.get_ids(), pokemons)
 
-        for member_position in range(self.get_size()):
-            for _, possible_opponent_member in possible_pokemons.iterrows():
-                opponent_members = self.members.copy()
-                opponent_members.iloc[member_position] = possible_opponent_member
+        candidate_indexes = rng.permutation(possible_pokemons.index.to_numpy())
 
-                if unique_types and not self.are_types_unique(opponent_members):
+        for member_position in range(self.get_size()):
+            for candidate_index in candidate_indexes:
+                neighbor_members = self.members.copy()
+                neighbor_members.iloc[member_position] = possible_pokemons.loc[
+                    candidate_index
+                ]
+
+                if unique_types and not self.are_types_unique(neighbor_members):
                     continue
 
-                opponents.append(PokemonTeam(opponent_members))
+                neighbors.append(PokemonTeam(neighbor_members))
 
-                if limit is not None and len(opponents) >= limit:
+                if limit is not None and len(neighbors) >= limit:
                     break
 
-            if limit is not None and len(opponents) >= limit:
+            if limit is not None and len(neighbors) >= limit:
                 break
 
-        return opponents
+        return neighbors
 
     def generate_team_with_random_replacement(
         self,
@@ -145,6 +151,49 @@ class PokemonTeam:
             members = candidate_members
 
         return cls(members)
+
+    @classmethod
+    def generate_unique_teams(
+        cls,
+        pokemons: DataFrame[PokemonSchema],
+        opponents_limit: int | None = None,
+        max_attempts: int | None = None,
+        team_size: int = TEAM_SIZE,
+        unique_types: bool = True,
+    ) -> list["PokemonTeam"]:
+        if opponents_limit is not None and opponents_limit <= 0:
+            raise ValueError("opponents_limit must be positive or None")
+
+        if max_attempts is not None and max_attempts <= 0:
+            raise ValueError("max_attempts must be positive")
+
+        if max_attempts is None and opponents_limit is None:
+            raise ValueError(
+                "When opponents_limit is None, you must provide max_attempts "
+                "to avoid an infinite loop."
+            )
+        elif max_attempts is None or max_attempts <= 0:
+            raise ValueError("max_attempts must be positive")
+
+        opponents: list[PokemonTeam] = []
+        seen_signatures: set[tuple[str, ...]] = set()
+
+        attempts = 0
+        while attempts < max_attempts and (
+            opponents_limit is None or len(opponents) < opponents_limit
+        ):
+            attempts += 1
+
+            team = cls.generate_team(pokemons, team_size, unique_types)
+            signature = tuple(sorted(team.get_ids()))
+
+            if signature in seen_signatures:
+                continue
+
+            seen_signatures.add(signature)
+            opponents.append(team)
+
+        return opponents
 
     @staticmethod
     def are_types_unique(members: DataFrame[PokemonSchema]) -> bool:
