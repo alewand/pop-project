@@ -11,15 +11,19 @@ Projekt został stworzony przy pomocy menadżera pakietów [uv](https://github.c
 ## Instrukcja uruchomienia
 Poniższa instrukcja odnosi się do systemu Linux.
 
-1. Instalacja uv
+1. Sklonowanie repozytorium
+```bash
+git clone https://github.com/alewand/pop-project.git
+```
+2. Instalacja uv
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-2. Pobranie odpowiednich bibliotek
+3. Pobranie odpowiednich bibliotek
 ```bash
 uv sync
 ```
-3. Uruchomienie projektu
+4. Uruchomienie projektu
 ```bash
 uv run src/main.py
 ```
