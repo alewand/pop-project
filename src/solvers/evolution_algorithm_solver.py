@@ -3,13 +3,13 @@ from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from classes import PokemonTeam
-from constants import POKEMON_TO_REPLACE_AMOUNT
-from constants.constants import (
+from constants import (
     DEFAULT_ELITE_SIZE,
     DEFAULT_GENERATIONS,
     DEFAULT_MUTATION_RATE,
     DEFAULT_POPULATION_SIZE,
     DEFAULT_TOURNAMENT_SIZE,
+    POKEMON_TO_REPLACE_AMOUNT,
 )
 from schemas import PokemonSchema
 from simulation import DamageFormula, TypeMultiplierFormula
