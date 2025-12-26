@@ -135,11 +135,11 @@ def calculate_damage(
     combined_attack: int = attacker[ATTACK] + attacker[SPECIAL_ATTACK]
     combined_defense: int = defender[DEFENSE] + defender[SPECIAL_DEFENSE]
 
-    firstEffectivness: float = defender[f"{AGAINST}{attacker[FIRST_TYPE]}"]
+    firstEffectivness: float = attacker[f"{AGAINST}{defender[FIRST_TYPE]}"]
 
     secondEffectivness: float = (
-        defender[f"{AGAINST}{attacker[SECOND_TYPE]}"]
-        if pd.notna(attacker[SECOND_TYPE])
+        attacker[f"{AGAINST}{defender[SECOND_TYPE]}"]
+        if pd.notna(defender[SECOND_TYPE])
         else 1.0
     )
 

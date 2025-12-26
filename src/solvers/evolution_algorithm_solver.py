@@ -12,8 +12,7 @@ from constants import (
     POKEMON_TO_REPLACE_AMOUNT,
 )
 from schemas import PokemonSchema
-from simulation import DamageFormula, TypeMultiplierFormula
-from simulation.simulation import simulate_battle
+from simulation import DamageFormula, TypeMultiplierFormula, simulate_battle
 
 
 class EvolutionAlgorithmPokemonSolver(BaseModel):
@@ -155,6 +154,8 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
         )
 
         for _ in range(self.generations):
+            print(f"Generation {_ + 1}/{self.generations}")
+
             fitnesses: list[float] = []
 
             for team in population:
