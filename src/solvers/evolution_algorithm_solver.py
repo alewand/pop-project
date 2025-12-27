@@ -7,15 +7,17 @@ from constants import (
     DEFAULT_ELITE_SIZE,
     DEFAULT_GENERATIONS,
     DEFAULT_MUTATION_RATE,
+    DEFAULT_OPPONENTS_LIMIT,
     DEFAULT_POPULATION_SIZE,
     DEFAULT_TOURNAMENT_SIZE,
     POKEMON_TO_REPLACE_AMOUNT,
 )
 from schemas import PokemonSchema
 from simulation import DamageFormula, TypeMultiplierFormula, simulate_battle
+from simulation.formulas import damage_attack_devide_defense, multiply_type_multiplier
 
 
-class EvolutionAlgorithmPokemonSolver(BaseModel):
+class EvolutionaryAlgorithmPokemonSolver(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     population_size: int = Field(
@@ -50,7 +52,7 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
     )
 
     opponents_limit: int | None = Field(
-        default=None,
+        default=DEFAULT_OPPONENTS_LIMIT,
         gt=0,
     )
 
@@ -59,7 +61,7 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
     )
 
     @model_validator(mode="after")
-    def check_elite_size(self) -> "EvolutionAlgorithmPokemonSolver":
+    def check_elite_size(self) -> "EvolutionaryAlgorithmPokemonSolver":
         if self.elite_size >= self.population_size:
             raise ValueError("elite_size must be smaller than population_size")
 
@@ -112,8 +114,8 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
         self,
         team: PokemonTeam,
         opponents: list[PokemonTeam],
-        type_multiplier_formula: TypeMultiplierFormula,
-        damage_formula: DamageFormula,
+        type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
+        damage_formula: DamageFormula = damage_attack_devide_defense,
     ) -> float:
         team_remaining_hps_percentage: list[float] = []
 
@@ -134,16 +136,13 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
     def solve(
         self,
         pokemons: DataFrame[PokemonSchema],
-        type_multiplier_formula: TypeMultiplierFormula,
-        damage_formula: DamageFormula,
-    ) -> tuple[PokemonTeam | None, float, list[list[float]]]:
+        type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
+        damage_formula: DamageFormula = damage_attack_devide_defense,
+    ) -> tuple[
+        PokemonTeam, float, list[list[tuple[PokemonTeam, float]]], list[PokemonTeam]
+    ]:
         rng = np.random.default_rng()
         population = self._initialize_population(pokemons)
-
-        best_team: PokemonTeam | None = None
-        best_fitness = float("-inf")
-
-        history: list[list[float]] = []
 
         opponents = PokemonTeam.generate_unique_teams(
             pokemons,
@@ -153,9 +152,21 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
             self.unique_types,
         )
 
-        for _ in range(self.generations):
-            print(f"Generation {_ + 1}/{self.generations}")
+        best_team = population[0].copy()
+        best_fitness = float("-inf")
 
+        for team in population:
+            fitness = self._evaluate(
+                team, opponents, type_multiplier_formula, damage_formula
+            )
+
+            if fitness > best_fitness:
+                best_fitness = fitness
+                best_team = team.copy()
+
+        history: list[list[tuple[PokemonTeam, float]]] = []
+
+        for _ in range(self.generations):
             fitnesses: list[float] = []
 
             for team in population:
@@ -168,7 +179,7 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
 
                 fitnesses.append(fitness)
 
-            history.append(fitnesses)
+            history.append(list(zip(population, fitnesses, strict=True)))
 
             scored = sorted(
                 zip(fitnesses, population, strict=True),
@@ -198,4 +209,4 @@ class EvolutionAlgorithmPokemonSolver(BaseModel):
 
             population = new_population
 
-        return best_team, best_fitness, history
+        return best_team, best_fitness, history, opponents

@@ -1,3 +1,3 @@
-from .evolution_algorithm_solver import EvolutionAlgorithmPokemonSolver
+from .evolution_algorithm_solver import EvolutionaryAlgorithmPokemonSolver
 
-__all__ = ["EvolutionAlgorithmPokemonSolver"]
+__all__ = ["EvolutionaryAlgorithmPokemonSolver"]

@@ -9,6 +9,7 @@ from constants import (
     ATTACK,
     DEFENSE,
     FIRST_TYPE,
+    MAX_STEPS_PER_BATTLE,
     SECOND_TYPE,
     SPECIAL_ATTACK,
     SPECIAL_DEFENSE,
@@ -25,6 +26,7 @@ def simulate_battle(
     opponent_team: PokemonTeam,
     type_multiplier_formula: TypeMultiplierFormula,
     damage_formula: DamageFormula,
+    max_steps: int = MAX_STEPS_PER_BATTLE,
 ) -> int:
     current_team_battle = current_team.copy()
     opponent_team_battle = opponent_team.copy()
@@ -41,7 +43,11 @@ def simulate_battle(
         opponent_pokemon_index,
     )
 
-    while sum(current_team_hp) > 0 and sum(opponent_team_hp) > 0:
+    steps = 0
+
+    while sum(current_team_hp) > 0 and sum(opponent_team_hp) > 0 and steps < max_steps:
+        steps += 1
+
         if turn == "current":
             attacker = current_team_battle.members.iloc[current_pokemon_index]
             defender = opponent_team_battle.members.iloc[opponent_pokemon_index]
@@ -121,6 +127,9 @@ def simulate_battle(
     final_current_team_hp = sum(current_team_hp)
 
     if final_current_team_hp > 0 and turn == "opponent":
+        final_current_team_hp = 0
+
+    if final_current_team_hp <= sum(opponent_team_hp) and steps >= max_steps:
         final_current_team_hp = 0
 
     return final_current_team_hp
