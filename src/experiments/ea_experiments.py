@@ -139,14 +139,44 @@ def compare_to_naive_solver(
     print(f"Best team stats sum: {ea_best_team.get_stats_sum()}")
 
 
+def perform_generation_tests(
+    pokemons: DataFrame[PokemonSchema], solver: EvolutionaryAlgorithmPokemonSolver
+) -> None:
+    print("Generation Tests:")
+    print("Generations: 20, Elite Size: 1")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 0
+    print("Generations: 20, Elite Size: 0")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 1
+    solver.generations = 30
+    print("Generations: 30, Elite Size: 1")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 0
+    print("Generations: 30, Elite Size: 0")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 1
+    solver.generations = 40
+    print("Generations: 40, Elite Size: 1")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 0
+    print("Generations: 40, Elite Size: 0")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 1
+    solver.generations = 50
+    print("Generations: 50, Elite Size: 1")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 0
+    print("Generations: 50, Elite Size: 0")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 1
+
+
 def perform_ea_experiments():
     pokemons = get_pokemons()
-
     solver = EvolutionaryAlgorithmPokemonSolver()
-    # solver.elite_size = 0
-    solver.generations = 30
-
-    run_multiple_runs(pokemons, solver, runs=4)
-
-    # compare_to_naive_solver(pokemons, solver)
-    # create_ea_plot(pokemons, solver)
+    compare_to_naive_solver(pokemons, solver)
+    create_ea_plot(pokemons, solver)
+    solver.elite_size = 0
+    create_ea_plot(pokemons, solver)
+    perform_generation_tests(pokemons, solver)
