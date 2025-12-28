@@ -5,6 +5,8 @@ DATASETS_DIR = PROJECT_ROOT / "data" / "datasets"
 POKEMON_DATA_SET_PATH = DATASETS_DIR / "pokemon.csv"
 COMPLETE_POKEMON_DATA_SET_PATH = DATASETS_DIR / "complete_pokemon.csv"
 
+EXPERIMENTS_IMAGES_DIR = PROJECT_ROOT / "experiments" / "images"
+
 TEAM_SIZE = 6
 POKEMON_TO_REPLACE_AMOUNT = 2
 

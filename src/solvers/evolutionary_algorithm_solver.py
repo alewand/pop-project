@@ -13,8 +13,13 @@ from constants import (
     POKEMON_TO_REPLACE_AMOUNT,
 )
 from schemas import PokemonSchema
-from simulation import DamageFormula, TypeMultiplierFormula, simulate_battle
-from simulation.formulas import damage_attack_devide_defense, multiply_type_multiplier
+from simulation import (
+    DamageFormula,
+    TypeMultiplierFormula,
+    damage_attack_devide_defense,
+    multiply_type_multiplier,
+    simulate_battle,
+)
 
 
 class EvolutionaryAlgorithmPokemonSolver(BaseModel):
