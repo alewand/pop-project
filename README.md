@@ -52,5 +52,5 @@ pip install -r .\requirements-dev.txt
 
 5. Uruchomienie aplikacji
 ```bash
-python .\src/main.py
+python .\src\main.py
 ```
