@@ -1,6 +1,7 @@
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pandera.typing import DataFrame
+from typing import Optional
 
 from classes import PokemonTeam
 from schemas import PokemonSchema
@@ -17,18 +18,24 @@ from constants import (
     DEFAULT_HILL_CLIMBING_NEIGHBOUR_REPLACEMENTS,
     DEFAULT_HILL_CLIMBING_OPPONENTS_LIMIT,
     DEFAULT_HILL_CLIMBING_PATIENCE,
-    DEFAULT_HILL_CLIMBING_RESTARTS
-    )
+    DEFAULT_HILL_CLIMBING_RESTARTS,
+)
 
 
 class HillClimbingPokemonSolver(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     max_evaluations: int = Field(default=DEFAULT_HILL_CLIMBING_MAX_EVALUATIONS, gt=0)
-    neighbors_per_step: int = Field(default=DEFAULT_HILL_CLIMBING_NEIGHBOUR_PER_STEP, gt=0)
-    neighbor_replacements: int = Field(default=DEFAULT_HILL_CLIMBING_NEIGHBOUR_REPLACEMENTS, gt=0)
+    neighbors_per_step: int = Field(
+        default=DEFAULT_HILL_CLIMBING_NEIGHBOUR_PER_STEP, gt=0
+    )
+    neighbor_replacements: int = Field(
+        default=DEFAULT_HILL_CLIMBING_NEIGHBOUR_REPLACEMENTS, gt=0
+    )
 
-    opponents_limit: int | None = Field(default=DEFAULT_HILL_CLIMBING_OPPONENTS_LIMIT, gt=0)
+    opponents_limit: int | None = Field(
+        default=DEFAULT_HILL_CLIMBING_OPPONENTS_LIMIT, gt=0
+    )
     unique_types: bool = Field(default=True)
     seed: int | None = Field(default=None)
 
@@ -51,7 +58,9 @@ class HillClimbingPokemonSolver(BaseModel):
         base_hp = sum(team.get_hps())
         ratios = []
         for opp in opponents:
-            remaining = simulate_battle(team, opp, type_multiplier_formula, damage_formula)
+            remaining = simulate_battle(
+                team, opp, type_multiplier_formula, damage_formula
+            )
             ratios.append(remaining / base_hp)
         return float(np.mean(np.array(ratios, dtype=float)))
 
@@ -73,15 +82,19 @@ class HillClimbingPokemonSolver(BaseModel):
         )
 
     def _random_team(self, pokemons: DataFrame[PokemonSchema]) -> PokemonTeam:
-        return PokemonTeam.generate_team(pokemons, team_size=6, unique_types=self.unique_types)
+        return PokemonTeam.generate_team(
+            pokemons, team_size=6, unique_types=self.unique_types
+        )
 
     def solve(
         self,
         pokemons: DataFrame[PokemonSchema],
         opponents: list[PokemonTeam] | None = None,
+        start_team: Optional[PokemonTeam] = None,
         type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
         damage_formula: DamageFormula = damage_attack_devide_defense,
     ) -> tuple[PokemonTeam, float, list[tuple[PokemonTeam, float]], list[PokemonTeam]]:
+
         rng = np.random.default_rng(self.seed)
         opponents = self._get_opponents(pokemons, opponents)
 
@@ -89,15 +102,20 @@ class HillClimbingPokemonSolver(BaseModel):
 
         best_team = None
         best_fit = float("-inf")
-
         evaluations = 0
 
-        for _ in range(self.restarts + 1):
+        for run_idx in range(self.restarts + 1):
             if evaluations >= self.max_evaluations:
                 break
 
-            current = self._random_team(pokemons)
-            current_fit = self._evaluate(current, opponents, type_multiplier_formula, damage_formula)
+            if run_idx == 0 and start_team is not None:
+                current = start_team.copy()
+            else:
+                current = self._random_team(pokemons)
+
+            current_fit = self._evaluate(
+                current, opponents, type_multiplier_formula, damage_formula
+            )
             evaluations += 1
 
             if current_fit > best_fit:
@@ -107,7 +125,6 @@ class HillClimbingPokemonSolver(BaseModel):
             no_improve = 0
 
             while evaluations < self.max_evaluations:
-                # Generuj kilka sąsiadów i wybierz najlepszego
                 best_neighbor = None
                 best_neighbor_fit = float("-inf")
 
@@ -120,17 +137,17 @@ class HillClimbingPokemonSolver(BaseModel):
                         replacements=self.neighbor_replacements,
                         unique_types=self.unique_types,
                     )
-                    cand_fit = self._evaluate(cand, opponents, type_multiplier_formula, damage_formula)
+                    cand_fit = self._evaluate(
+                        cand, opponents, type_multiplier_formula, damage_formula
+                    )
                     evaluations += 1
 
                     if cand_fit > best_neighbor_fit:
                         best_neighbor_fit = cand_fit
                         best_neighbor = cand
 
-                # Loguj stan (po “kroku” hill climbingu)
                 history.append((current.copy(), current_fit))
 
-                # Jeśli najlepszy sąsiad poprawia → przejdź
                 if best_neighbor is not None and best_neighbor_fit > current_fit:
                     current = best_neighbor
                     current_fit = best_neighbor_fit
@@ -141,13 +158,13 @@ class HillClimbingPokemonSolver(BaseModel):
                         best_team = current.copy()
                 else:
                     no_improve += 1
-                    # Brak poprawy → koniec (albo patience)
                     if self.patience is None or no_improve >= self.patience:
                         break
 
-        # best_team nie powinno być None, ale dla bezpieczeństwa:
         if best_team is None:
             best_team = self._random_team(pokemons)
-            best_fit = self._evaluate(best_team, opponents, type_multiplier_formula, damage_formula)
+            best_fit = self._evaluate(
+                best_team, opponents, type_multiplier_formula, damage_formula
+            )
 
         return best_team, best_fit, history, opponents

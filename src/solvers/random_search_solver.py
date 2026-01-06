@@ -33,7 +33,9 @@ class RandomSearchPokemonSolver(BaseModel):
         base_hp = sum(team.get_hps())
         ratios = []
         for opp in opponents:
-            remaining = simulate_battle(team, opp, type_multiplier_formula, damage_formula)
+            remaining = simulate_battle(
+                team, opp, type_multiplier_formula, damage_formula
+            )
             ratios.append(remaining / base_hp)
         return float(np.mean(np.array(ratios, dtype=float)))
 
@@ -54,6 +56,14 @@ class RandomSearchPokemonSolver(BaseModel):
             unique_types=self.unique_types,
         )
 
+    def _get_random_team(
+        self, pokemons: DataFrame[PokemonSchema]) -> PokemonTeam:
+        return PokemonTeam.generate_team(
+            pokemons,
+            team_size=6,
+            unique_types=self.unique_types,
+        )
+
     def solve(
         self,
         pokemons: DataFrame[PokemonSchema],
@@ -64,14 +74,20 @@ class RandomSearchPokemonSolver(BaseModel):
         rng = np.random.default_rng(self.seed)
         opponents = self._get_opponents(pokemons, opponents)
 
-        best_team = PokemonTeam.generate_team(pokemons, team_size=6, unique_types=self.unique_types)
-        best_fit = self._evaluate(best_team, opponents, type_multiplier_formula, damage_formula)
+        best_team = self._get_random_team(pokemons)
+        best_fit = self._evaluate(
+            best_team, opponents, type_multiplier_formula, damage_formula
+        )
 
         history: list[tuple[PokemonTeam, float]] = [(best_team.copy(), best_fit)]
 
         for _ in range(self.trials - 1):
-            team = PokemonTeam.generate_team(pokemons, team_size=6, unique_types=self.unique_types)
-            fit = self._evaluate(team, opponents, type_multiplier_formula, damage_formula)
+            team = PokemonTeam.generate_team(
+                pokemons, team_size=6, unique_types=self.unique_types
+            )
+            fit = self._evaluate(
+                team, opponents, type_multiplier_formula, damage_formula
+            )
             history.append((team.copy(), fit))
 
             if fit > best_fit:

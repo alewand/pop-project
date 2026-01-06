@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from typing import Optional
 from dataclasses import dataclass
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -13,7 +14,7 @@ from constants import (
     DEFAULT_SA_OPPONENTS_LIMIT,
     DEFAULT_PATIENCE,
     DEFAULT_RESTARTS,
-    TEAM_SIZE
+    TEAM_SIZE,
 )
 
 from classes import PokemonTeam
@@ -37,11 +38,7 @@ class SAHistoryEntry:
 
 
 class SimulatedAnnealingSolver(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        populate_by_name=True
-    )
-
+    model_config = ConfigDict(validate_assignment=True, populate_by_name=True)
 
     T0: float = Field(
         default=DEFAULT_INITIAL_TEMPERATURE,
@@ -101,10 +98,14 @@ class SimulatedAnnealingSolver(BaseModel):
     @model_validator(mode="after")
     def _check_params(self) -> "SimulatedAnnealingSolver":
         if self.Tmin >= self.T0:
-            raise ValueError("min_temperature (Tmin) must be smaller than initial_temperature (T0).")
+            raise ValueError(
+                "min_temperature (Tmin) must be smaller than initial_temperature (T0)."
+            )
 
         if self.neighbor_replacements > TEAM_SIZE:
-            raise ValueError(f"neighbor_replacements must be <= TEAM_SIZE ({TEAM_SIZE}).")
+            raise ValueError(
+                f"neighbor_replacements must be <= TEAM_SIZE ({TEAM_SIZE})."
+            )
 
         return self
 
@@ -119,7 +120,9 @@ class SimulatedAnnealingSolver(BaseModel):
         ratios = []
         base_hp = sum(team.get_hps())
         for opp in opponents:
-            remaining = simulate_battle(team, opp, type_multiplier_formula, damage_formula)
+            remaining = simulate_battle(
+                team, opp, type_multiplier_formula, damage_formula
+            )
             ratios.append(remaining / base_hp)
         return float(np.mean(np.array(ratios, dtype=float)))
 
@@ -131,9 +134,13 @@ class SimulatedAnnealingSolver(BaseModel):
         return rng.random() < math.exp(delta / T)
 
     def _random_team(self, pokemons: DataFrame[PokemonSchema]) -> PokemonTeam:
-        return PokemonTeam.generate_team(pokemons, team_size=6, unique_types=self.unique_types)
+        return PokemonTeam.generate_team(
+            pokemons, team_size=6, unique_types=self.unique_types
+        )
 
-    def _generate_opponents(self, pokemons: DataFrame[PokemonSchema]) -> list[PokemonTeam]:
+    def _generate_opponents(
+        self, pokemons: DataFrame[PokemonSchema]
+    ) -> list[PokemonTeam]:
         return PokemonTeam.generate_unique_teams(
             pokemons,
             self.opponents_limit,
@@ -168,9 +175,14 @@ class SimulatedAnnealingSolver(BaseModel):
         step: int,
         type_multiplier_formula: TypeMultiplierFormula,
         damage_formula: DamageFormula,
+        start_team: Optional[PokemonTeam] = None,
     ) -> tuple[PokemonTeam, float, int, int]:
-        current = self._random_team(pokemons)
-        current_fit = self._fitness(current, opponents, cache, type_multiplier_formula, damage_formula)
+        current = (
+            start_team.copy() if start_team is not None else self._random_team(pokemons)
+        )
+        current_fit = self._fitness(
+            current, opponents, cache, type_multiplier_formula, damage_formula
+        )
         evaluations += 1
 
         local_best = current.copy()
@@ -189,7 +201,9 @@ class SimulatedAnnealingSolver(BaseModel):
                     replacements=self.neighbor_replacements,
                     unique_types=self.unique_types,
                 )
-                cand_fit = self._fitness(candidate, opponents, cache, type_multiplier_formula, damage_formula)
+                cand_fit = self._fitness(
+                    candidate, opponents, cache, type_multiplier_formula, damage_formula
+                )
                 evaluations += 1
 
                 delta = cand_fit - current_fit
@@ -207,7 +221,9 @@ class SimulatedAnnealingSolver(BaseModel):
                     no_improve += 1
 
                 step += 1
-                history.append(SAHistoryEntry(step, T, current_fit, local_best_fit, accepted))
+                history.append(
+                    SAHistoryEntry(step, T, current_fit, local_best_fit, accepted)
+                )
 
                 if self.patience is not None and no_improve >= self.patience:
                     return local_best, local_best_fit, evaluations, step
@@ -219,24 +235,49 @@ class SimulatedAnnealingSolver(BaseModel):
     def solve(
         self,
         pokemons: DataFrame[PokemonSchema],
+        opponents: Optional[list[PokemonTeam]] = None,
+        start_team: Optional[PokemonTeam] = None,
         type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
         damage_formula: DamageFormula = damage_attack_devide_defense,
     ) -> tuple[PokemonTeam, float, list[SAHistoryEntry], list[PokemonTeam]]:
         rng = np.random.default_rng(self.seed)
-        opponents = self._generate_opponents(pokemons)
+
+        # If not opponents given, generate them
+        opponents = (
+            opponents if opponents is not None else self._generate_opponents(pokemons)
+        )
 
         cache: dict[tuple[str, ...], float] = {}
         history: list[SAHistoryEntry] = []
 
-        best_team = self._random_team(pokemons)
-        best_fit = self._fitness(best_team, opponents, cache, type_multiplier_formula, damage_formula)
+        # If not start_team given, best_team starts as random team
+        best_team = (
+            start_team.copy() if start_team is not None else self._random_team(pokemons)
+        )
+        best_fit = self._fitness(
+            best_team, opponents, cache, type_multiplier_formula, damage_formula
+        )
         evaluations = 1
         step = 0
 
-        for _ in range(self.restarts + 1):
+        restarts = 1 if start_team is not None else self.restarts + 1
+
+        for run_idx in range(restarts):
+            run_start = (
+                start_team if (run_idx == 0 and start_team is not None) else None
+            )
+
             team_r, fit_r, evaluations, step = self._run_once(
-                pokemons, opponents, rng, cache, history, evaluations, step,
-                type_multiplier_formula, damage_formula
+                pokemons,
+                opponents,
+                rng,
+                cache,
+                history,
+                evaluations,
+                step,
+                type_multiplier_formula,
+                damage_formula,
+                start_team=run_start,
             )
 
             if fit_r > best_fit:
