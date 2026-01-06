@@ -37,7 +37,7 @@ class SAHistoryEntry:
     accepted: bool
 
 
-class SimulatedAnnealingSolver(BaseModel):
+class SimulatedAnnealingPokemonSolver(BaseModel):
     model_config = ConfigDict(validate_assignment=True, populate_by_name=True)
 
     T0: float = Field(
