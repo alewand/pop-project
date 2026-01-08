@@ -94,7 +94,6 @@ class HillClimbingPokemonSolver(BaseModel):
         type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
         damage_formula: DamageFormula = damage_attack_devide_defense,
     ) -> tuple[PokemonTeam, float, list[tuple[PokemonTeam, float]], list[PokemonTeam]]:
-
         rng = np.random.default_rng(self.seed)
         opponents = self._get_opponents(pokemons, opponents)
 

@@ -56,8 +56,7 @@ class RandomSearchPokemonSolver(BaseModel):
             unique_types=self.unique_types,
         )
 
-    def _get_random_team(
-        self, pokemons: DataFrame[PokemonSchema]) -> PokemonTeam:
+    def _get_random_team(self, pokemons: DataFrame[PokemonSchema]) -> PokemonTeam:
         return PokemonTeam.generate_team(
             pokemons,
             team_size=6,

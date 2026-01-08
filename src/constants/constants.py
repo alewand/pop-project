@@ -41,6 +41,7 @@ ATTACK = "attack"
 SPECIAL_ATTACK = "sp_attack"
 DEFENSE = "defense"
 SPECIAL_DEFENSE = "sp_defense"
+STATS_SUM = "stats_sum"
 
 STATS_COLS = [
     ATTACK,
