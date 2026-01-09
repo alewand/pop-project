@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import os
 
 
 class PdfReport:
@@ -7,6 +8,9 @@ class PdfReport:
         self.output_path = output_path
         self.title = title
         self.pages = []
+
+        if not os.path.exists(os.path.dirname(output_path)):
+            os.makedirs(os.path.dirname(output_path))
 
     def add_text(self, text: str, fontsize: int = 12):
         fig, ax = plt.subplots(figsize=(11.7, 8.3))  # A4 landscape-ish
@@ -16,7 +20,6 @@ class PdfReport:
 
     def add_figure(self, fig: plt.Figure):
         self.pages.append(fig)
-
 
     def add_dataframe(self, df, title: str, max_rows: int = 25):
         view = df.head(max_rows).copy()
