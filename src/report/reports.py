@@ -64,7 +64,8 @@ class PdfReport:
 
         if len(df) > max_rows:
             ax.text(
-                0.01, 0.02,
+                0.01,
+                0.02,
                 f"Showing first {max_rows} of {len(df)} rows",
                 transform=ax.transAxes,
                 fontsize=9,

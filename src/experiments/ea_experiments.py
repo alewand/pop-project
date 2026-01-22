@@ -172,6 +172,25 @@ def perform_generation_tests(
     solver.elite_size = 1
 
 
+def perform_elite_tests(
+    pokemons: DataFrame[PokemonSchema],
+    solver: EvolutionaryAlgorithmPokemonSolver,
+) -> None:
+    print("Elite Tests:")
+    solver.elite_size = 0
+    print("Elite Size: 0")
+    run_multiple_runs(pokemons, solver, runs=4)
+    solver.elite_size = 1
+    print("Elite Size: 1")
+    run_multiple_runs(pokemons, solver, runs=4)
+    print("Elite Size: 2")
+    solver.elite_size = 2
+    run_multiple_runs(pokemons, solver, runs=4)
+    print("Elite Size: 3")
+    solver.elite_size = 3
+    run_multiple_runs(pokemons, solver, runs=4)
+
+
 def perform_ea_experiments():
     pokemons = get_pokemons()
     solver = EvolutionaryAlgorithmPokemonSolver()
@@ -180,3 +199,5 @@ def perform_ea_experiments():
     solver.elite_size = 0
     create_ea_plot(pokemons, solver)
     perform_generation_tests(pokemons, solver)
+    solver.population_size = 6
+    perform_elite_tests(pokemons, solver)
