@@ -141,6 +141,7 @@ class EvolutionaryAlgorithmPokemonSolver(BaseModel):
     def solve(
         self,
         pokemons: DataFrame[PokemonSchema],
+        opponents: list[PokemonTeam] | None = None,
         type_multiplier_formula: TypeMultiplierFormula = multiply_type_multiplier,
         damage_formula: DamageFormula = damage_attack_devide_defense,
     ) -> tuple[
@@ -148,14 +149,14 @@ class EvolutionaryAlgorithmPokemonSolver(BaseModel):
     ]:
         rng = np.random.default_rng()
         population = self._initialize_population(pokemons)
-
-        opponents = PokemonTeam.generate_unique_teams(
-            pokemons,
-            self.opponents_limit,
-            self.opponents_limit * 10 if self.opponents_limit is not None else None,
-            population[0].get_size(),
-            self.unique_types,
-        )
+        if opponents is None:
+            opponents = PokemonTeam.generate_unique_teams(
+                pokemons,
+                self.opponents_limit,
+                self.opponents_limit * 10 if self.opponents_limit is not None else None,
+                population[0].get_size(),
+                self.unique_types,
+            )
 
         best_team = population[0].copy()
         best_fitness = float("-inf")
